@@ -47989,3 +47989,8 @@ readers do not read off random characters that represent icons */
   font-family: "Font Awesome 5 Brands";
 }
 
+.sidebar-dark-primary .sidebar .router-link-exact-active {
+  color: #fff !important;
+  background-color: #f39c12 !important;
+}
+

@@ -1,4 +1,6 @@
 import VueRouter from 'vue-router';
+import { Form, HasError, AlertError } from 'vform';
+import VueMoment from 'vue-moment';
 
 /**
  * First we will load all of this project's JavaScript dependencies which
@@ -8,12 +10,15 @@ import VueRouter from 'vue-router';
 
 require('./bootstrap');
 
+window.Form = Form;
 window.Vue = require('vue');
 
 Vue.use(VueRouter);
+Vue.use(VueMoment);
 
 const routes = [
 	{ path: '/dashboard', component: require('./components/Dashboard.vue').default },
+	{ path: '/users', component: require('./components/Users.vue').default },
 	{ path: '/profile', component: require('./components/Profile.vue').default }
 ];
 
@@ -33,7 +38,12 @@ const router = new VueRouter({
 // const files = require.context('./', true, /\.vue$/i)
 // files.keys().map(key => Vue.component(key.split('/').pop().split('.')[0], files(key).default))
 
-Vue.component('example-component', require('./components/ExampleComponent.vue').default);
+Vue.filter('ucfirst', (str) => {
+	return str.charAt(0).toUpperCase() + str.slice(1);
+});
+
+Vue.component(HasError.name, HasError);
+Vue.component(AlertError.name, AlertError);
 
 /**
  * Next, we will create a fresh Vue application instance and attach it to

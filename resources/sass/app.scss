@@ -14,3 +14,8 @@
 @import "~@fortawesome/fontawesome-free/scss/fontawesome.scss";
 @import "~@fortawesome/fontawesome-free/scss/solid.scss";
 @import "~@fortawesome/fontawesome-free/scss/brands.scss";
+
+.sidebar-dark-primary .sidebar .router-link-exact-active {
+	color: #fff!important;
+	background-color: #f39c12!important;
+}
