@@ -1,6 +1,8 @@
 import VueRouter from 'vue-router';
 import { Form, HasError, AlertError } from 'vform';
 import VueMoment from 'vue-moment';
+import VueProgressBar from 'vue-progressbar';
+import Swal from 'sweetalert2';
 
 /**
  * First we will load all of this project's JavaScript dependencies which
@@ -9,12 +11,6 @@ import VueMoment from 'vue-moment';
  */
 
 require('./bootstrap');
-
-window.Form = Form;
-window.Vue = require('vue');
-
-Vue.use(VueRouter);
-Vue.use(VueMoment);
 
 const routes = [
 	{ path: '/dashboard', component: require('./components/Dashboard.vue').default },
@@ -25,6 +21,26 @@ const routes = [
 const router = new VueRouter({
 	mode: 'history',
 	routes 
+});
+
+const Toast = Swal.mixin({
+	toast: true,
+	position: 'top-end',
+	showConfirmButton: false,
+	timer: 3000
+});
+
+window.Form = Form;
+window.Swal = Swal;
+window.Toast = Toast;
+window.Vue = require('vue');
+
+Vue.use(VueRouter);
+Vue.use(VueMoment);
+Vue.use(VueProgressBar, {
+	color: 'rgb(143, 255, 199)',
+	failedColor: 'red',
+	height: '2px'
 });
 
 /**
