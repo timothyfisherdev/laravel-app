@@ -168,16 +168,22 @@
             createUser() {
                 this.$Progress.start();
 
-                this.form.post('/api/users');
+                this.form.post('/api/users')
+                    .then(({ data }) => {
+                        this.users.unshift(data);
 
-                $('#addNew').modal('hide');
+                        $('#addNew').modal('hide');
 
-                Toast.fire({
-                    type: 'success',
-                    title: 'User created successfully'
-                });
+                        Toast.fire({
+                            type: 'success',
+                            title: 'User created successfully'
+                        });
 
-                this.$Progress.finish();
+                        this.$Progress.finish();
+                    })
+                    .catch(() => {
+                        this.$Progress.fail();
+                    });
             }
         },
         created() {
