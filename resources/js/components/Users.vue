@@ -5,8 +5,8 @@
                 <h3 class="card-title mb-0">Users Table</h3>
 
                 <div class="card-tools">
-                    <button type="button" class="btn btn-success" data-toggle="modal" data-target="#addNew">
-                        Add New
+                    <button type="button" class="btn btn-success" @click="openCreateModal">
+                        Create User
                         <i class="fas fa-user-plus fa-fw"></i>
                     </button>
                 </div>
@@ -21,24 +21,26 @@
                             <th>Email</th>
                             <th>Type</th>
                             <th>Created</th>
+                            <th>Updated</th>
                             <th>Modify</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="user in users" :key="user.id">
+                        <tr v-for="(user, index) in users" :key="user.id">
                             <td>{{ user.id }}</td>
                             <td>{{ user.name }}</td>
                             <td>{{ user.email }}</td>
                             <td>{{ user.type | ucfirst }}</td>
-                            <td>{{ user.created_at | moment('MMMM Do, YYYY') }}</td>
+                            <td>{{ user.created_at | moment('MMMM Do, YYYY, h:mm:a') }}</td>
+                            <td>{{ user.updated_at | moment('MMMM Do, YYYY, h:mm:a') }}</td>
                             <td>
-                                <a href="#">
+                                <button type="button" class="btn" @click="openEditModal(user)">
                                     <i class="fa fa-edit text-primary"></i>
-                                </a>
+                                </button>
                                 /
-                                <a href="#">
+                                <button type="button" class="btn" @click="deleteUser(user.id, index)">
                                     <i class="fa fa-trash text-danger"></i>
-                                </a>
+                                </button>
                             </td>
                         </tr>
                     </tbody>
@@ -47,12 +49,12 @@
             <!-- /.card-body -->
         </div>
 
-        <div class="modal fade" id="addNew" tabindex="-1" role="dialog" aria-labelledby="addNewLabel" aria-hidden="true">
+        <div class="modal fade" id="userDataModal" tabindex="-1" role="dialog" aria-labelledby="userDataModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered" role="document">
                 <div class="modal-content">
-                    <form @submit.prevent="createUser">
+                    <form @submit.prevent="(userDataModalMode === 'create') ? createUser() : updateUser()">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="addNewLabel">Add New</h5>
+                            <h5 class="modal-title" id="userDataModalLabel">{{ (userDataModalMode === 'create') ? 'Create' : 'Edit' }} User</h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
@@ -137,7 +139,9 @@
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
-                            <button type="submit" class="btn btn-primary">Create</button>
+                            <button type="submit" class="btn btn-primary">
+                                {{ (userDataModalMode === 'create') ? 'Create' : 'Update' }}
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -152,16 +156,33 @@
             return {
                 users: {},
                 form: new Form({
+                    id: '',
                     name: '',
                     email: '',
                     password: '',
                     type: '',
                     bio: '',
                     photo: ''
-                })
+                }),
+                userDataModalMode: 'create'
+            }
+        },
+        computed: {
+            userDataModal: () => {
+                return $('#userDataModal');
             }
         },
         methods: {
+            openCreateModal() {
+                this.userDataModalMode = 'create';
+                this.form.reset();
+                this.userDataModal.modal('show');
+            },
+            openEditModal(user) {
+                this.userDataModalMode = 'edit';
+                this.form.fill(user);
+                this.userDataModal.modal('show');
+            },
             loadUsers() {
                 axios.get('/api/users').then(({ data: { data } }) => (this.users = data));
             },
@@ -172,11 +193,63 @@
                     .then(({ data }) => {
                         this.users.unshift(data);
 
-                        $('#addNew').modal('hide');
+                        this.userDataModal.modal('hide');
 
                         Toast.fire({
                             type: 'success',
                             title: 'User created successfully'
+                        });
+
+                        this.$Progress.finish();
+                    })
+                    .catch(() => {
+                        this.$Progress.fail();
+                    });
+            },
+            deleteUser(id, index) {
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You won't be able to revert this!",
+                    type: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.value) {
+                        this.$Progress.start();
+
+                        this.form.delete(`/api/users/${id}`)
+                            .then(() => {
+                                this.users.splice(index, 1);
+
+                                Swal.fire(
+                                    'Deleted!',
+                                    'The user has been deleted.',
+                                    'success'
+                                );
+
+                                this.$Progress.finish();
+                            })
+                            .catch(() => {
+                                this.$Progress.fail();
+                            });
+                    }
+                })
+            },
+            updateUser() {
+                this.$Progress.start();
+
+                this.form.patch(`/api/users/${this.form.id}`)
+                    .then(({ data }) => {
+                        Vue.set(this.users, this.users.map(user => user.id).indexOf(data.id), data);
+                        //Vue.set(this.users, this.currentlyEditingIndex, data);
+
+                        this.userDataModal.modal('hide');
+
+                        Toast.fire({
+                            type: 'success',
+                            title: 'User updated successfully'
                         });
 
                         this.$Progress.finish();
